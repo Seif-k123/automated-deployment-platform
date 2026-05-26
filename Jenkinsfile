@@ -31,7 +31,7 @@ pipeline {
                 sh 'docker push $DOCKER_IMAGE'
             }
         }
-         stage('Terraform Apply') {
+        stage('Terraform Apply') {
             steps {
                 withCredentials([
                     string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
@@ -63,3 +63,4 @@ pipeline {
             echo "Pipeline Failed ❌"
         }
     }
+}
