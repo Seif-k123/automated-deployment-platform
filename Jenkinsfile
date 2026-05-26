@@ -30,9 +30,24 @@ pipeline {
                 sh 'docker push $DOCKER_IMAGE'
             }
         }
-        stage('Deploy') {
+        stage('Terraform Apply') {
             steps {
-                sh 'echo "Deploy step will trigger Ansible/Terraform here"'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds']]) {
+                    sh '''
+                    cd terraform
+                    terraform init
+                    terraform apply -auto-approve
+                    '''
+                }
+            }
+        }
+        stage('Run Ansible') {
+            steps {
+                sh '''
+                cd ansible
+                ansible-playbook -i inventory.tpl playbook.yml
+                '''
             }
         }
     }
