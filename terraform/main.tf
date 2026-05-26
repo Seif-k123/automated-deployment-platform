@@ -87,3 +87,16 @@ resource "aws_instance" "server" {
     Environment = var.environment
   }
 }
+resource "local_file" "inventory" {
+  filename = "${path.module}/../ansible/inventory.ini"
+
+  content = <<EOT
+[servers]
+${aws_instance.server.public_ip}
+
+[servers:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=~/.ssh/${var.key_name}.pem
+ansible_python_interpreter=/usr/bin/python3
+EOT
+}
