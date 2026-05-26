@@ -7,7 +7,6 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // تم إضافة credentialsId لربطه بمفتاح الـ SSH الصحيح
                 git branch: 'main',
                     credentialsId: 'github-ssh',
                     url: 'git@github.com:Seif-k123/automated-deployment-platform.git'
@@ -34,7 +33,6 @@ pipeline {
         }
          stage('Terraform Apply') {
             steps {
-            
                 withCredentials([
                     string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
                     string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
@@ -47,12 +45,11 @@ pipeline {
                 }
             }
         }
-
         stage('Run Ansible') {
             steps {
                 sh '''
                 cd ansible
-                ansible-playbook -i inventory.tpl playbook.yml
+                ansible-playbook -i inventory playbook.yml
                 '''
             }
         }
