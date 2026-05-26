@@ -1,0 +1,42 @@
+---
+- hosts: servers
+  become: true
+
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - docker.io
+        state: present
+
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create app directory
+      file:
+        path: /home/ubuntu/app
+        state: directory
+        mode: '0755'
+
+    - name: Copy application files
+      copy:
+        src: ../app/
+        dest: /home/ubuntu/app/
+        mode: '0755'
+
+    - name: Remove old container if exists
+      shell: docker rm -f devops-app || true
+
+    - name: Build Docker image
+      shell: docker build -t devops-app /home/ubuntu/app/
+
+    - name: Run Docker container
+      shell: docker run -d --name devops-app -p 80:80 devops-app

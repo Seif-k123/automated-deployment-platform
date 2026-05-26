@@ -1,0 +1,5 @@
+region       = "us-east-1"
+profile      = "seifuser"
+ami_id       = "ami-091138d0f0d41ff90"
+key_name     = "my-keypair"
+allowed_ssh_ip = "156.199.50.242/32"
