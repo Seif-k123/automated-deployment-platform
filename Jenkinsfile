@@ -7,8 +7,10 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                // تم إضافة credentialsId لربطه بمفتاح الـ SSH الصحيح
                 git branch: 'main',
-                url: 'git@github.com:Seif-k123/automated-deployment-platform.git'
+                    credentialsId: 'github-ssh',
+                    url: 'git@github.com:Seif-k123/automated-deployment-platform.git'
             }
         }
         stage('Build Docker Image') {
@@ -30,10 +32,13 @@ pipeline {
                 sh 'docker push $DOCKER_IMAGE'
             }
         }
-        stage('Terraform Apply') {
+         stage('Terraform Apply') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-creds']]) {
+            
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
                     sh '''
                     cd terraform
                     terraform init
@@ -42,6 +47,7 @@ pipeline {
                 }
             }
         }
+
         stage('Run Ansible') {
             steps {
                 sh '''
