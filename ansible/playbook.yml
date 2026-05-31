@@ -1,9 +1,7 @@
 ---
 - hosts: servers
   become: true
-
   tasks:
-
     - name: Update apt cache
       apt:
         update_cache: yes
@@ -39,4 +37,38 @@
       shell: docker build -t devops-app /home/ubuntu/app/
 
     - name: Run Docker container
-      shell: docker run -d --name devops-app -p 80:80 devops-app
+      shell: docker run -d --name devops-app -p 80:80 -p 5000:5000 devops-app
+
+    # ── Node Exporter على الـ app server ──────────────────────
+    - name: Download node_exporter
+      get_url:
+        url: "https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz"
+        dest: /tmp/node_exporter.tar.gz
+
+    - name: Extract and install node_exporter
+      shell: |
+        tar xzf /tmp/node_exporter.tar.gz -C /tmp/
+        cp /tmp/node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/
+        chmod +x /usr/local/bin/node_exporter
+
+    - name: Create node_exporter service
+      copy:
+        dest: /etc/systemd/system/node_exporter.service
+        content: |
+          [Unit]
+          Description=Node Exporter
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/local/bin/node_exporter
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Start and enable node_exporter
+      systemd:
+        name: node_exporter
+        state: started
+        enabled: yes
+        daemon_reload: yes

@@ -1,6 +1,8 @@
 from flask import Flask
+from prometheus_flask_exporter import PrometheusExporter
 
 app = Flask(__name__)
+PrometheusExporter(app)
 
 @app.route("/")
 def home():

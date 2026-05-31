@@ -1,10 +1,14 @@
 pipeline {
+
     agent any
+
     environment {
         DOCKER_IMAGE = "seifkhaled123/flask-app:latest"
         DOCKERHUB_CREDENTIALS = "dockerhub-cred"
     }
+
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -12,25 +16,29 @@ pipeline {
                     url: 'git@github.com:Seif-k123/automated-deployment-platform.git'
             }
         }
+
         stage('Build Docker Image') {
             steps {
                 sh 'docker build --provenance=false -t $DOCKER_IMAGE ./app'
             }
         }
+
         stage('Login to DockerHub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-                    usernameVariable: 'USER',
-                    passwordVariable: 'PASS')]) {
+                                                  usernameVariable: 'USER',
+                                                  passwordVariable: 'PASS')]) {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
                 }
             }
         }
+
         stage('Push Image') {
             steps {
                 sh 'docker push $DOCKER_IMAGE'
             }
         }
+
         stage('Terraform Apply') {
             steps {
                 withCredentials([
@@ -38,29 +46,43 @@ pipeline {
                     string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     sh '''
-                    cd terraform
-                    terraform init
-                    terraform apply -auto-approve
+                        cd terraform
+                        terraform init
+                        terraform apply -auto-approve
                     '''
                 }
             }
         }
+
         stage('Run Ansible') {
             steps {
                 sh '''
-                cd ansible
-                export ANSIBLE_HOST_KEY_CHECKING=False
-                ansible-playbook -i inventory.ini playbook.yml
+                    cd ansible
+                    export ANSIBLE_HOST_KEY_CHECKING=False
+                    ansible-playbook -i inventory.ini playbook.yml
                 '''
             }
         }
+
+        stage('Deploy Monitoring') {
+            steps {
+                sh '''
+                    cd ansible
+                    export ANSIBLE_HOST_KEY_CHECKING=False
+                    ansible-playbook -i inventory.ini monitoring-playbook.yml
+                '''
+            }
+        }
+
     }
+
     post {
         success {
-            echo "Pipeline Success 🚀"
+            echo "Pipeline Success ðŸš€"
         }
         failure {
-            echo "Pipeline Failed ❌"
+            echo "Pipeline Failed âŒ"
         }
     }
+
 }

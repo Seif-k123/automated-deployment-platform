@@ -1,8 +1,6 @@
-
 # ---------------- VPC ----------------
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr
-
   tags = {
     Name        = "${var.project_name}-vpc"
     Environment = var.environment
@@ -14,7 +12,6 @@ resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidr
   map_public_ip_on_launch = true
-
   tags = {
     Name = "${var.project_name}-public-subnet"
   }
@@ -23,7 +20,6 @@ resource "aws_subnet" "public" {
 # ---------------- Internet Gateway ----------------
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.main.id
-
   tags = {
     Name = "${var.project_name}-igw"
   }
@@ -32,7 +28,6 @@ resource "aws_internet_gateway" "gw" {
 # ---------------- Route Table ----------------
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
-
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.gw.id
@@ -65,6 +60,14 @@ resource "aws_security_group" "app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Flask metrics"
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -77,26 +80,11 @@ resource "aws_security_group" "app_sg" {
 resource "aws_instance" "server" {
   ami           = var.ami_id
   instance_type = var.instance_type
-
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.app_sg.id]
   key_name               = var.key_name
-
   tags = {
     Name        = "${var.project_name}-server"
     Environment = var.environment
   }
-}
-resource "local_file" "inventory" {
-  filename = "${path.module}/../ansible/inventory.ini"
-
-  content = <<EOT
-[servers]
-${aws_instance.server.public_ip}
-
-[servers:vars]
-ansible_user=ubuntu
-ansible_ssh_private_key_file=~/.ssh/${var.key_name}.pem
-ansible_python_interpreter=/usr/bin/python3
-EOT
 }
