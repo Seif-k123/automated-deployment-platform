@@ -54,6 +54,12 @@ pipeline {
             }
         }
 
+        stage('Wait for EC2') {
+            steps {
+                sh 'sleep 40'
+            }
+        }
+
         stage('Run Ansible') {
             steps {
                 sh '''
@@ -78,10 +84,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline Success ðŸš€"
+            echo "Pipeline Success 🚀"
         }
         failure {
-            echo "Pipeline Failed âŒ"
+            echo "Pipeline Failed ❌"
         }
     }
 
