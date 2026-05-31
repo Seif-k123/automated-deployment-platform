@@ -133,6 +133,15 @@
         daemon_reload: yes
 
     # ── Grafana ──────────────────────────────────────────────
+    - name: Remove old grafana key if exists
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/share/keyrings/grafana.key
+        - /usr/share/keyrings/grafana.gpg
+        - /etc/apt/sources.list.d/grafana.list
+
     - name: Install dependencies
       apt:
         name:
