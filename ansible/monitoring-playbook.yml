@@ -133,7 +133,7 @@
         daemon_reload: yes
 
     # ── Grafana ──────────────────────────────────────────────
-    - name: Remove old grafana key if exists
+    - name: Remove old broken grafana key and list files
       file:
         path: "{{ item }}"
         state: absent
@@ -151,22 +151,31 @@
           - gnupg
         state: present
 
-    - name: Add grafana GPG key
-      shell: |
-        wget -q -O - https://apt.grafana.com/gpg.key | \
-        gpg --dearmor -o /usr/share/keyrings/grafana.gpg
+    - name: Download Grafana GPG key (ASCII format)
+      get_url:
+        url: https://apt.grafana.com/gpg.key
+        dest: /tmp/grafana.key
+        mode: '0644'
 
-    - name: Add grafana repo
-      copy:
-        dest: /etc/apt/sources.list.d/grafana.list
-        content: |
-          deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main
+    - name: Convert Grafana key to binary format (dearmor)
+      command: gpg --dearmor -o /usr/share/keyrings/grafana.gpg /tmp/grafana.key
+      args:
+        creates: /usr/share/keyrings/grafana.gpg
+
+    - name: Add official Grafana apt repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+        state: present
+        filename: grafana
+
+    - name: Force apt cache update to avoid secure conflicts
+      apt:
+        update_cache: yes
 
     - name: Install grafana
       apt:
         name: grafana
         state: present
-        update_cache: yes
 
     - name: Start and enable grafana
       systemd:
