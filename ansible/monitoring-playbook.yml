@@ -142,12 +142,13 @@
         state: present
 
     - name: Add grafana GPG key
-      shell: wget -q -O - https://apt.grafana.com/gpg.key | apt-key add -
+      shell: wget -q -O /usr/share/keyrings/grafana.key https://apt.grafana.com/gpg.key
 
     - name: Add grafana repo
-      apt_repository:
-        repo: "deb https://apt.grafana.com stable main"
-        state: present
+      copy:
+        dest: /etc/apt/sources.list.d/grafana.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/grafana.key] https://apt.grafana.com stable main
 
     - name: Install grafana
       apt:
@@ -161,4 +162,3 @@
         state: started
         enabled: yes
         daemon_reload: yes
-      
