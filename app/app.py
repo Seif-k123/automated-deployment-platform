@@ -1,8 +1,8 @@
 from flask import Flask
-from prometheus_flask_exporter import PrometheusExporter
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
-PrometheusExporter(app)
+metrics = PrometheusMetrics(app)
 
 @app.route("/")
 def home():
