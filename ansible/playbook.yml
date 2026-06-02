@@ -37,7 +37,7 @@
       shell: docker build -t devops-app /home/ubuntu/app/
 
     - name: Run Docker container
-      shell: docker run -d --name devops-app -p 80:80 -p 5000:5000 devops-app
+      shell: docker run -d --name devops-app -p 80:5000 -p 5000:5000 devops-app
 
     # ── Node Exporter على الـ app server ──────────────────────
     - name: Download node_exporter
